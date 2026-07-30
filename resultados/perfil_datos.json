@@ -1,0 +1,660 @@
+{
+  "archivo_origen": "dataset.csv",
+  "fecha_generacion": "2026-07-30T14:31:14",
+  "estructura": {
+    "cantidad_filas": 10000,
+    "cantidad_columnas": 8,
+    "columnas": [
+      "id",
+      "nombre",
+      "estado",
+      "especie",
+      "origen",
+      "ubicacion",
+      "episodios",
+      "fecha_creacion"
+    ]
+  },
+  "calidad": {
+    "vacios_por_columna": {
+      "id": 0,
+      "nombre": 0,
+      "estado": 747,
+      "especie": 0,
+      "origen": 1211,
+      "ubicacion": 0,
+      "episodios": 0,
+      "fecha_creacion": 2268
+    },
+    "nulos_equivalentes_por_columna": {
+      "id": 0,
+      "nombre": 0,
+      "estado": 3867,
+      "especie": 976,
+      "origen": 2478,
+      "ubicacion": 2938,
+      "episodios": 0,
+      "fecha_creacion": 2268
+    },
+    "valores_distintos_por_columna": {
+      "id": 8000,
+      "nombre": 120,
+      "estado": 13,
+      "especie": 103,
+      "origen": 8,
+      "ubicacion": 7,
+      "episodios": 5814,
+      "fecha_creacion": 3572
+    },
+    "duplicados_exactos_adicionales": 1011,
+    "ids_distintos": 8000,
+    "cantidad_ids_repetidos": 1766,
+    "filas_adicionales_por_ids_repetidos": 2000,
+    "ids_repetidos_con_diferencias": 928,
+    "anomalias_texto": {
+      "posible_codificacion_con_A_tilde": 658,
+      "posible_codificacion_de_comillas": 362,
+      "entidad_html_ampersand": 1270,
+      "entidad_html_numerica": 311
+    }
+  },
+  "episodios": {
+    "formatos_detectados": {
+      "separados_por_coma": 2454,
+      "separados_por_barra": 2536,
+      "individual": 1679,
+      "lista_python": 3331
+    },
+    "cantidad_codigos_validos_distintos": 45,
+    "codigos_validos": [
+      "S01E01",
+      "S01E02",
+      "S01E03",
+      "S01E04",
+      "S01E05",
+      "S01E06",
+      "S01E07",
+      "S01E08",
+      "S01E09",
+      "S02E01",
+      "S02E02",
+      "S02E03",
+      "S02E04",
+      "S02E05",
+      "S02E06",
+      "S02E07",
+      "S02E08",
+      "S02E09",
+      "S03E01",
+      "S03E02",
+      "S03E03",
+      "S03E04",
+      "S03E05",
+      "S03E06",
+      "S03E07",
+      "S03E08",
+      "S03E09",
+      "S04E01",
+      "S04E02",
+      "S04E03",
+      "S04E04",
+      "S04E05",
+      "S04E06",
+      "S04E07",
+      "S04E08",
+      "S04E09",
+      "S05E01",
+      "S05E02",
+      "S05E03",
+      "S05E04",
+      "S05E05",
+      "S05E06",
+      "S05E07",
+      "S05E08",
+      "S05E09"
+    ],
+    "filas_con_episodios_repetidos": 559,
+    "cantidad_tokens_invalidos": 0,
+    "muestra_tokens_invalidos": []
+  },
+  "fechas": {
+    "formatos_detectados": {
+      "timestamp_iso": 1313,
+      "invalida_explicita": 2305,
+      "vacia": 2268,
+      "mes_dia_anio": 1359,
+      "fecha_iso": 1391,
+      "dia_mes_anio": 1364
+    }
+  },
+  "valores_frecuentes": {
+    "id": [
+      {
+        "valor": "7469",
+        "cantidad": 4
+      },
+      {
+        "valor": "814",
+        "cantidad": 4
+      },
+      {
+        "valor": "500",
+        "cantidad": 4
+      },
+      {
+        "valor": "668",
+        "cantidad": 4
+      },
+      {
+        "valor": "916",
+        "cantidad": 4
+      },
+      {
+        "valor": "1216",
+        "cantidad": 4
+      },
+      {
+        "valor": "214",
+        "cantidad": 4
+      },
+      {
+        "valor": "2899",
+        "cantidad": 4
+      },
+      {
+        "valor": "5634",
+        "cantidad": 4
+      },
+      {
+        "valor": "7091",
+        "cantidad": 4
+      },
+      {
+        "valor": "1883",
+        "cantidad": 4
+      },
+      {
+        "valor": "3425",
+        "cantidad": 4
+      },
+      {
+        "valor": "2893",
+        "cantidad": 4
+      },
+      {
+        "valor": "5515",
+        "cantidad": 4
+      },
+      {
+        "valor": "5187",
+        "cantidad": 3
+      },
+      {
+        "valor": "7563",
+        "cantidad": 3
+      },
+      {
+        "valor": "1566",
+        "cantidad": 3
+      },
+      {
+        "valor": "7640",
+        "cantidad": 3
+      },
+      {
+        "valor": "6491",
+        "cantidad": 3
+      },
+      {
+        "valor": "6387",
+        "cantidad": 3
+      }
+    ],
+    "nombre": [
+      {
+        "valor": "Morty Smith",
+        "cantidad": 687
+      },
+      {
+        "valor": "Summer Smith",
+        "cantidad": 625
+      },
+      {
+        "valor": "Birdperson",
+        "cantidad": 615
+      },
+      {
+        "valor": "Meeseeks",
+        "cantidad": 606
+      },
+      {
+        "valor": "Pickle Rick",
+        "cantidad": 596
+      },
+      {
+        "valor": "Rick Sanchez",
+        "cantidad": 586
+      },
+      {
+        "valor": "Squanchy",
+        "cantidad": 585
+      },
+      {
+        "valor": "Evil Morty",
+        "cantidad": 584
+      },
+      {
+        "valor": "Beth Smith",
+        "cantidad": 558
+      },
+      {
+        "valor": "Jerry Smith",
+        "cantidad": 555
+      },
+      {
+        "valor": "rick sanchez",
+        "cantidad": 171
+      },
+      {
+        "valor": "evil morty",
+        "cantidad": 166
+      },
+      {
+        "valor": "pickle rick",
+        "cantidad": 164
+      },
+      {
+        "valor": "morty smith",
+        "cantidad": 160
+      },
+      {
+        "valor": "birdperson",
+        "cantidad": 158
+      },
+      {
+        "valor": "jerry smith",
+        "cantidad": 155
+      },
+      {
+        "valor": "meeseeks",
+        "cantidad": 154
+      },
+      {
+        "valor": "beth smith",
+        "cantidad": 143
+      },
+      {
+        "valor": "squanchy",
+        "cantidad": 131
+      },
+      {
+        "valor": "RICK SANCHEZ",
+        "cantidad": 116
+      }
+    ],
+    "estado": [
+      {
+        "valor": "???",
+        "cantidad": 812
+      },
+      {
+        "valor": "dead",
+        "cantidad": 805
+      },
+      {
+        "valor": "N/A",
+        "cantidad": 797
+      },
+      {
+        "valor": "unknown",
+        "cantidad": 796
+      },
+      {
+        "valor": "Dead",
+        "cantidad": 784
+      },
+      {
+        "valor": "UNKNOWN",
+        "cantidad": 769
+      },
+      {
+        "valor": "Alive",
+        "cantidad": 769
+      },
+      {
+        "valor": "None",
+        "cantidad": 762
+      },
+      {
+        "valor": "NULL",
+        "cantidad": 749
+      },
+      {
+        "valor": "alive",
+        "cantidad": 748
+      },
+      {
+        "valor": "",
+        "cantidad": 747
+      },
+      {
+        "valor": "ALIVE",
+        "cantidad": 738
+      },
+      {
+        "valor": "DEAD",
+        "cantidad": 724
+      }
+    ],
+    "especie": [
+      {
+        "valor": "human",
+        "cantidad": 1001
+      },
+      {
+        "valor": "---",
+        "cantidad": 921
+      },
+      {
+        "valor": "Mythological Creature",
+        "cantidad": 710
+      },
+      {
+        "valor": " Alien",
+        "cantidad": 699
+      },
+      {
+        "valor": "Alien  ",
+        "cantidad": 679
+      },
+      {
+        "valor": "Unkn0wn",
+        "cantidad": 657
+      },
+      {
+        "valor": "Robot",
+        "cantidad": 656
+      },
+      {
+        "valor": "Cronenberg",
+        "cantidad": 644
+      },
+      {
+        "valor": "Human",
+        "cantidad": 619
+      },
+      {
+        "valor": "HUMAN",
+        "cantidad": 220
+      },
+      {
+        "valor": "robot",
+        "cantidad": 174
+      },
+      {
+        "valor": " alien",
+        "cantidad": 169
+      },
+      {
+        "valor": "cronenberg",
+        "cantidad": 167
+      },
+      {
+        "valor": "mythological creature",
+        "cantidad": 161
+      },
+      {
+        "valor": "unkn0wn",
+        "cantidad": 161
+      },
+      {
+        "valor": "alien  ",
+        "cantidad": 158
+      },
+      {
+        "valor": "MYTHOLOGICAL CREATURE",
+        "cantidad": 126
+      },
+      {
+        "valor": "UNKN0WN",
+        "cantidad": 123
+      },
+      {
+        "valor": "ROBOT",
+        "cantidad": 106
+      },
+      {
+        "valor": "ALIEN  ",
+        "cantidad": 101
+      }
+    ],
+    "origen": [
+      {
+        "valor": "Signus 5",
+        "cantidad": 1311
+      },
+      {
+        "valor": "Citadel of Ricks &amp; Mortys",
+        "cantidad": 1270
+      },
+      {
+        "valor": "N/A",
+        "cantidad": 1267
+      },
+      {
+        "valor": "unknown",
+        "cantidad": 1266
+      },
+      {
+        "valor": "Abadango",
+        "cantidad": 1246
+      },
+      {
+        "valor": "Earth (C-137)",
+        "cantidad": 1217
+      },
+      {
+        "valor": "Earth (Replacement Dimension)",
+        "cantidad": 1212
+      },
+      {
+        "valor": "",
+        "cantidad": 1211
+      }
+    ],
+    "ubicacion": [
+      {
+        "valor": "---",
+        "cantidad": 1492
+      },
+      {
+        "valor": "NULL",
+        "cantidad": 1446
+      },
+      {
+        "valor": "Anatomy Park",
+        "cantidad": 1445
+      },
+      {
+        "valor": "Planet Squanch",
+        "cantidad": 1437
+      },
+      {
+        "valor": "Earth (C-137)",
+        "cantidad": 1436
+      },
+      {
+        "valor": "Gazorpazorp",
+        "cantidad": 1374
+      },
+      {
+        "valor": "Citadel of Ricks",
+        "cantidad": 1370
+      }
+    ],
+    "episodios": [
+      {
+        "valor": "S02E09",
+        "cantidad": 56
+      },
+      {
+        "valor": "S03E08",
+        "cantidad": 47
+      },
+      {
+        "valor": "S04E09",
+        "cantidad": 47
+      },
+      {
+        "valor": "S02E03",
+        "cantidad": 46
+      },
+      {
+        "valor": "S02E07",
+        "cantidad": 44
+      },
+      {
+        "valor": "S02E08",
+        "cantidad": 44
+      },
+      {
+        "valor": "S05E06",
+        "cantidad": 43
+      },
+      {
+        "valor": "S02E01",
+        "cantidad": 43
+      },
+      {
+        "valor": "S05E09",
+        "cantidad": 42
+      },
+      {
+        "valor": "S01E05",
+        "cantidad": 42
+      },
+      {
+        "valor": "S04E02",
+        "cantidad": 42
+      },
+      {
+        "valor": "S04E01",
+        "cantidad": 42
+      },
+      {
+        "valor": "S04E06",
+        "cantidad": 42
+      },
+      {
+        "valor": "S03E04",
+        "cantidad": 41
+      },
+      {
+        "valor": "S01E09",
+        "cantidad": 41
+      },
+      {
+        "valor": "S03E02",
+        "cantidad": 41
+      },
+      {
+        "valor": "S02E06",
+        "cantidad": 41
+      },
+      {
+        "valor": "S05E05",
+        "cantidad": 40
+      },
+      {
+        "valor": "S02E02",
+        "cantidad": 39
+      },
+      {
+        "valor": "S04E03",
+        "cantidad": 39
+      }
+    ],
+    "fecha_creacion": [
+      {
+        "valor": "",
+        "cantidad": 2268
+      },
+      {
+        "valor": "NOT_A_DATE",
+        "cantidad": 1342
+      },
+      {
+        "valor": "INVALID_DATE_2026",
+        "cantidad": 963
+      },
+      {
+        "valor": "2021-03-27T12:00:00.000000Z",
+        "cantidad": 6
+      },
+      {
+        "valor": "01/01/2020",
+        "cantidad": 6
+      },
+      {
+        "valor": "20/09/2022",
+        "cantidad": 6
+      },
+      {
+        "valor": "2021-08-25T12:00:00.000000Z",
+        "cantidad": 5
+      },
+      {
+        "valor": "03-16-2021",
+        "cantidad": 5
+      },
+      {
+        "valor": "04-17-2017",
+        "cantidad": 5
+      },
+      {
+        "valor": "2018-01-28T12:00:00.000000Z",
+        "cantidad": 5
+      },
+      {
+        "valor": "24/04/2019",
+        "cantidad": 5
+      },
+      {
+        "valor": "09-11-2022",
+        "cantidad": 5
+      },
+      {
+        "valor": "11-03-2023",
+        "cantidad": 5
+      },
+      {
+        "valor": "27/05/2018",
+        "cantidad": 5
+      },
+      {
+        "valor": "07/01/2021",
+        "cantidad": 5
+      },
+      {
+        "valor": "2018-01-20T12:00:00.000000Z",
+        "cantidad": 5
+      },
+      {
+        "valor": "2019-04-16",
+        "cantidad": 5
+      },
+      {
+        "valor": "28/03/2018",
+        "cantidad": 5
+      },
+      {
+        "valor": "05-11-2024",
+        "cantidad": 5
+      },
+      {
+        "valor": "2022-01-25T12:00:00.000000Z",
+        "cantidad": 5
+      }
+    ]
+  }
+}

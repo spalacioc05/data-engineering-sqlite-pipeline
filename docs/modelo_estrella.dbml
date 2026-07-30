@@ -1,0 +1,49 @@
+Project prueba_ingenieria_datos_estrella {
+  database_type: 'SQLite'
+  Note: 'Modelo estrella generado desde la base transaccional.'
+}
+
+Table tbl_dim_personaje {
+  id_dim_personaje integer [pk, increment]
+  id_personaje_origen integer [not null, unique]
+  nombre text [not null]
+  especie text
+  origen text
+  fecha_creacion text
+}
+
+Table tbl_dim_episodio {
+  id_dim_episodio integer [pk, increment]
+  codigo text [not null, unique]
+  temporada integer [not null]
+  numero integer [not null]
+}
+
+Table tbl_dim_estado {
+  id_dim_estado integer [pk, increment]
+  estado text [not null, unique]
+}
+
+Table tbl_dim_ubicacion {
+  id_dim_ubicacion integer [pk, increment]
+  ubicacion text [not null, unique]
+}
+
+Table tbl_hecho_aparicion {
+  id_aparicion integer [pk, increment]
+  id_dim_personaje integer [not null]
+  id_dim_episodio integer [not null]
+  id_dim_estado integer
+  id_dim_ubicacion integer
+  id_observacion_origen integer [not null]
+  cantidad integer [not null, default: 1]
+
+  indexes {
+    (id_observacion_origen, id_dim_episodio) [unique]
+  }
+}
+
+Ref: tbl_hecho_aparicion.id_dim_personaje > tbl_dim_personaje.id_dim_personaje
+Ref: tbl_hecho_aparicion.id_dim_episodio > tbl_dim_episodio.id_dim_episodio
+Ref: tbl_hecho_aparicion.id_dim_estado > tbl_dim_estado.id_dim_estado
+Ref: tbl_hecho_aparicion.id_dim_ubicacion > tbl_dim_ubicacion.id_dim_ubicacion

@@ -1,258 +1,368 @@
 # Justificación de la solución
 
-## 1. Contexto y objetivo
+**Autor:** Santiago Palacio Cárdenas
 
-La prueba técnica parte de un archivo CSV con 10.000 registros de personajes y un script inicial defectuoso que intenta cargar la información directamente en una base de datos SQLite.
+## 1. Contexto
 
-El objetivo del desarrollo es:
+La prueba técnica entregó tres elementos principales:
 
-1. Corregir y reorganizar el pipeline recibido.
-2. Construir una base de datos transaccional en SQLite.
-3. Generar, a partir de la base transaccional, un modelo estrella orientado a análisis.
-4. Documentar las decisiones, dificultades, supuestos y validaciones realizadas.
+- Un archivo `dataset.csv` con 10.000 registros.
+- Un archivo `pipeline.py` incompleto.
+- Un `README.md` con la solicitud de construir una base transaccional y, a partir de ella, un modelo estrella en SQLite.
 
-La solución se desarrollará como un proceso batch local, utilizando Python y SQLite, priorizando claridad, trazabilidad, validaciones y facilidad de ejecución.
+La solución se desarrolló como un proceso batch local con Python y SQLite. La intención no fue construir una arquitectura innecesariamente grande, sino resolver correctamente el problema con herramientas fáciles de ejecutar, revisar y explicar.
 
-## 2. Diagnóstico inicial del código recibido
+El flujo final quedó así:
 
-Antes de modificar el pipeline se ejecutó el archivo original para conocer su estado real.
+```mermaid
+flowchart LR
+    A[dataset.csv] --> B[Perfilado]
+    B --> C[Reglas de limpieza]
+    C --> D[db_transaccional.db]
+    D --> E[db_estrella.db]
+    E --> F[Consultas y análisis]
+```
 
-La ejecución produjo el siguiente error:
+## 2. Revisión del código original
+
+Antes de modificar el script se ejecutó tal como fue recibido. La primera falla fue:
 
 ```text
 NameError: name 'csv_path' is not defined
 ```
 
-Durante la inspección inicial se identificaron los siguientes problemas:
+También se encontraron otros problemas:
 
-- La variable `csv_path` no está definida.
-- El script intenta leer la columna `state`, pero el dataset contiene la columna `estado`.
-- La sentencia SQL utiliza `INSERT INT` en lugar de `INSERT INTO`.
-- La base de datos generada se llama `base_datos.db`, pero los entregables solicitan `db_transaccional.db` y `db_estrella.db`.
-- Se crea una única tabla genérica llamada `tabla`.
-- Todos los campos son almacenados como texto.
-- No existen claves primarias, claves foráneas, restricciones ni índices.
-- No se construye un modelo transaccional.
-- No se construye un modelo estrella.
-- No hay validaciones de calidad de datos.
-- No existe manejo de errores, rollback ni logging.
-- No se conserva evidencia de las transformaciones realizadas.
-- El proceso no garantiza idempotencia.
+- La ruta del CSV no estaba definida.
+- El código buscaba la columna `state`, pero el archivo contiene `estado`.
+- La sentencia usaba `INSERT INT` en lugar de `INSERT INTO`.
+- Se creaba una sola tabla genérica llamada `tabla`.
+- Todos los campos se almacenaban como texto.
+- No había claves primarias, claves foráneas, restricciones ni índices.
+- No existían validaciones de calidad.
+- No se construía el modelo transaccional solicitado.
+- No se generaba el modelo estrella.
+- No había una estrategia para los duplicados ni para los valores inconsistentes.
 
-La única práctica rescatable del script original es el uso de parámetros en la sentencia `execute`, lo cual evita construir consultas SQL mediante concatenación directa de cadenas.
+El uso de parámetros en `cursor.execute()` sí era una buena decisión del código original, porque evita formar consultas SQL mediante concatenación de texto.
 
-## 3. Perfilado y calidad de los datos
+## 3. Perfilado inicial
 
-Se creó el script `profile_dataset.py` para inspeccionar el dataset sin modificarlo y generar un informe reproducible en `results/data_profile.json`.
+Antes de decidir cómo limpiar o modelar la información se creó `perfil_dataset.py`. Su propósito fue conocer el estado real del archivo sin modificarlo.
 
-### 3.1 Estructura del archivo
+El informe quedó almacenado en:
 
-El archivo contiene:
+```text
+resultados/perfil_datos.json
+```
 
-- 10.000 registros.
-- 8 columnas.
-- 8.000 identificadores distintos.
+Los principales resultados fueron:
 
-Columnas identificadas:
+| Hallazgo | Resultado |
+|---|---:|
+| Filas | 10.000 |
+| Columnas | 8 |
+| IDs distintos | 8.000 |
+| IDs repetidos | 1.766 |
+| Filas adicionales por IDs repetidos | 2.000 |
+| Duplicados exactos adicionales | 1.011 |
+| IDs repetidos con información diferente | 928 |
+| Episodios distintos | 45 |
 
-- `id`
-- `nombre`
-- `estado`
-- `especie`
-- `origen`
-- `ubicacion`
-- `episodios`
-- `fecha_creacion`
+También se encontraron valores ausentes representados de varias maneras, diferencias de mayúsculas y espacios, entidades HTML, algunos textos dañados y fechas con formatos distintos.
 
-### 3.2 Identificadores y duplicados
+La columna `episodios` venía en cuatro presentaciones:
 
-Se encontraron:
+- Un episodio individual.
+- Valores separados por coma.
+- Valores separados por `|`.
+- Listas con sintaxis de Python.
 
-- 1.766 identificadores repetidos.
-- 2.000 filas adicionales asociadas a identificadores repetidos.
-- 1.011 filas adicionales que son duplicados exactos.
-- 928 identificadores repetidos con registros diferentes.
+Hacer este perfilado primero permitió que las reglas de transformación se basaran en lo que realmente contenía el archivo y no en suposiciones.
 
-La existencia de registros diferentes para un mismo identificador indica que algunas filas podrían representar cambios o nuevas observaciones del mismo personaje. Sin embargo, el dataset no incluye una fecha de actualización ni una columna de versión que permita determinar cuál registro es el más reciente.
+## 4. Decisiones de limpieza
 
-Por esta razón, no se eliminarán silenciosamente los registros repetidos ni se asumirá que la última fila representa el estado vigente. La solución conservará trazabilidad sobre las observaciones recibidas.
+Las transformaciones se mantuvieron simples y explícitas.
 
-### 3.3 Valores vacíos o equivalentes a nulo
+### Textos
 
-Cantidad de valores vacíos:
+Se eliminaron espacios sobrantes y se decodificaron entidades HTML, por ejemplo:
 
-- `estado`: 747
-- `origen`: 1.211
-- `fecha_creacion`: 2.268
+```text
+Citadel of Ricks &amp; Mortys
+```
 
-Cantidad de valores considerados equivalentes a nulo según los marcadores detectados:
+se convirtió en:
 
-- `estado`: 3.867
-- `especie`: 976
-- `origen`: 2.478
-- `ubicacion`: 2.938
-- `fecha_creacion`: 2.268
+```text
+Citadel of Ricks & Mortys
+```
 
-Entre los marcadores encontrados están:
+También se normalizaron nombres y categorías cuando existía una equivalencia clara. La limpieza de caracteres dañados fue limitada para no modificar valores de forma agresiva.
 
-- Cadena vacía.
-- `N/A`
-- `NULL`
-- `None`
-- `---`
-- `???`
+### Valores ausentes
 
-### 3.4 Variaciones e inconsistencias de texto
+Se trataron como ausencia de dato los siguientes marcadores:
 
-Se detectaron múltiples variaciones de mayúsculas, minúsculas, espacios y caracteres añadidos en columnas como `nombre`, `estado` y `especie`.
+```text
+cadena vacía
+N/A
+NULL
+None
+---
+???
+```
 
-También se identificaron patrones asociados con problemas de texto:
+Cuando correspondía, estos valores se almacenaron como `NULL`.
 
-- 658 apariciones del patrón `Ã`.
-- 362 apariciones del patrón `â€`.
-- 1.270 apariciones de `&amp;`.
-- 311 apariciones de entidades numéricas HTML como `&#39;`.
+Se mantuvo la diferencia entre un valor conocido llamado `Unknown` y un dato realmente ausente.
 
-Estas observaciones indican que será necesario:
+### Fechas
 
-- Eliminar espacios externos.
-- Homogeneizar categorías.
-- Decodificar entidades HTML.
-- Corregir únicamente los casos de texto dañado que puedan repararse de forma controlada.
-- Conservar el valor original en la capa de trazabilidad.
+Las fechas válidas se llevaron al formato:
 
-### 3.5 Episodios
+```text
+YYYY-MM-DD
+```
 
-La columna `episodios` utiliza cuatro formatos diferentes:
+Se reconocieron fechas ISO, timestamps ISO, `DD/MM/YYYY` y `MM-DD-YYYY`. Los textos inválidos no se reemplazaron por fechas inventadas; se conservaron en la capa raw y su versión normalizada quedó como `NULL`.
 
-- Separados por coma: 2.454 filas.
-- Separados por barra vertical: 2.536 filas.
-- Episodio único: 1.679 filas.
-- Lista con sintaxis de Python: 3.331 filas.
+### Episodios
 
-Se identificaron 45 códigos de episodio distintos y todos los tokens válidos cumplen el patrón:
+Los distintos formatos se convirtieron en una lista uniforme. Cada código fue validado con el patrón:
 
 ```text
 SddEdd
 ```
 
-Ejemplo:
+Los episodios repetidos dentro de una misma fila se conservaron una sola vez en la relación normalizada.
+
+### Duplicados
+
+Cada fila se representó mediante un hash SHA-256 calculado con sus valores originales.
+
+La primera aparición se conserva como referencia y las apariciones posteriores con el mismo hash se marcan como duplicados exactos. Estos registros no se eliminan de la base transaccional; permanecen disponibles para trazabilidad.
+
+## 5. Diseño de la base transaccional
+
+La base transaccional no se planteó como una sola tabla plana. Se separaron las responsabilidades para conservar el dato original, evitar repeticiones innecesarias y representar correctamente las relaciones.
+
+![Modelo transaccional](docs/img/modelo_transaccional.png)
+
+### Control de la carga
+
+`tbl_carga` registra:
+
+- Archivo procesado.
+- Fecha inicial y final.
+- Filas leídas.
+- Filas procesadas.
+- Estado de la ejecución.
+- Observaciones.
+
+Esto permite comprobar que la carga terminó y conocer cuántos registros fueron procesados.
+
+### Capa original
+
+`tbl_registro_raw` conserva las 10.000 filas tal como llegaron en el CSV. Incluye:
+
+- Número de fila.
+- Valores originales.
+- Hash del registro.
+- Indicador de duplicado exacto.
+- Referencia a la carga.
+
+Esta tabla es la principal evidencia de linaje: permite rastrear el dato normalizado hasta el archivo original.
+
+### Catálogos
+
+Se crearon:
+
+- `tbl_especie`
+- `tbl_origen`
+- `tbl_estado`
+- `tbl_ubicacion`
+
+Estas tablas evitan repetir miles de veces los mismos valores normalizados y permiten controlar mejor las categorías disponibles.
+
+### Personajes y observaciones
+
+`tbl_personaje` contiene una fila por identificador de personaje, con sus atributos más estables.
+
+`tbl_personaje_observacion` contiene una fila por registro recibido y enlaza:
+
+- El personaje.
+- El registro original.
+- El estado observado.
+- La ubicación observada.
+- Las advertencias de calidad.
+
+Esta separación fue necesaria porque existen 8.000 IDs, pero 10.000 filas. Además, 928 IDs repetidos tienen información diferente.
+
+No se eligió automáticamente “la última fila” como correcta porque el dataset no incluye fecha de actualización ni número de versión.
+
+### Episodios
+
+`tbl_episodio` almacena los 45 episodios distintos.
+
+`tbl_observacion_episodio` resuelve la relación muchos a muchos entre observaciones y episodios.
+
+La base transaccional terminó con 24.548 relaciones observación–episodio.
+
+### Evidencia de la carga
+
+![Base transaccional generada](docs/img/base_transaccional.png)
+
+La captura muestra las diez tablas y el registro de `tbl_carga`, donde se confirma que `dataset.csv` fue procesado con 10.000 filas leídas, 10.000 procesadas y estado `COMPLETADA`.
+
+## 6. Diseño del modelo estrella
+
+La segunda base se genera leyendo exclusivamente `db_transaccional.db`.
+
+Esta decisión separa dos responsabilidades:
+
+- La base transaccional conserva y organiza el dato.
+- La base estrella facilita consultas y agregaciones.
+
+![Modelo estrella](docs/img/modelo_estrella.png)
+
+El grano de `tbl_hecho_aparicion` es:
+
+> Una observación de un personaje asociada a un episodio.
+
+Se crearon las siguientes dimensiones:
+
+- `tbl_dim_personaje`
+- `tbl_dim_episodio`
+- `tbl_dim_estado`
+- `tbl_dim_ubicacion`
+
+La tabla `tbl_hecho_aparicion` contiene las claves de esas dimensiones, la referencia a la observación transaccional y una medida `cantidad` con valor `1`.
+
+Esta estructura permite responder preguntas como:
+
+- ¿Cuántas apariciones tiene cada personaje?
+- ¿Qué episodios concentran más registros?
+- ¿Cuántas apariciones existen por estado?
+- ¿Cómo se distribuyen las apariciones por ubicación?
+
+### Tratamiento de duplicados en el modelo analítico
+
+La base transaccional conserva todas las filas, incluidos los duplicados exactos.
+
+En cambio, el modelo estrella excluye esas copias para evitar contar varias veces la misma observación analítica.
+
+Por eso los resultados son distintos:
 
 ```text
-S01E01
+24.548 relaciones en la base transaccional
+22.052 filas en la tabla de hechos
 ```
 
-También existen filas con episodios repetidos dentro del mismo campo. Por esta razón, la información será normalizada y modelada como una relación muchos a muchos entre personajes y episodios.
+La diferencia corresponde a las relaciones asociadas con filas marcadas como duplicados exactos.
 
-### 3.6 Fechas
+### Evidencia del modelo estrella
 
-La columna `fecha_creacion` contiene:
+![Base estrella generada](docs/img/base_estrella.png)
 
-- Fechas ISO.
-- Timestamps ISO.
-- Fechas con formato `DD/MM/YYYY`.
-- Fechas con formato `MM-DD-YYYY`.
-- Valores vacíos.
-- Valores explícitamente inválidos.
+La captura muestra las cinco tablas y las 22.052 filas de `tbl_hecho_aparicion`.
 
-Los valores inválidos no serán reemplazados por fechas inventadas. Se conservará el valor original y la fecha normalizada será `NULL` cuando no sea posible interpretarla con una regla documentada.
+## 7. Construcción segura de los archivos SQLite
 
-## 4. Diseño de la base transaccional
-
-Pendiente de completar durante la implementación.
-
-La base transaccional deberá:
-
-- Conservar las 10.000 filas originales en una capa de staging o trazabilidad.
-- Evitar pérdida de información.
-- Normalizar entidades y relaciones.
-- Utilizar claves primarias y foráneas.
-- Separar personajes, episodios, catálogos y observaciones.
-- Registrar métricas básicas de ejecución del pipeline.
-- Permitir reconstruir el origen de cada registro transformado.
-
-## 5. Diseño del modelo estrella
-
-Pendiente de completar durante la implementación.
-
-El modelo estrella se construirá exclusivamente a partir de `db_transaccional.db`.
-
-Antes de implementarlo se definirá de forma explícita el grano de la tabla de hechos. La propuesta inicial es que una fila represente una relación única entre un personaje y un episodio.
-
-## 6. Transformaciones realizadas
-
-Pendiente de completar durante la implementación.
-
-Las transformaciones previstas incluyen:
-
-- Normalización de espacios.
-- Homogeneización de categorías.
-- Conversión controlada de marcadores de ausencia a `NULL`.
-- Decodificación de entidades HTML.
-- Reparación controlada de texto cuando sea posible.
-- Parseo de episodios desde sus distintos formatos.
-- Eliminación de episodios repetidos dentro de una misma observación.
-- Conversión de fechas válidas a un formato estándar.
-- Conservación del valor original para fines de trazabilidad.
-
-## 7. Validaciones efectuadas
-
-Hasta el momento se realizaron las siguientes validaciones:
-
-- Verificación de existencia del archivo CSV.
-- Validación del encabezado esperado.
-- Conteo de filas y columnas.
-- Conteo de valores vacíos.
-- Conteo de valores equivalentes a nulo.
-- Conteo de valores distintos.
-- Identificación de duplicados exactos.
-- Identificación de identificadores repetidos.
-- Identificación de registros repetidos con diferencias.
-- Detección de formatos de episodios.
-- Validación del patrón de códigos de episodio.
-- Clasificación de formatos de fecha.
-- Detección de patrones de texto posiblemente dañados.
-
-El informe generado se conserva en:
+Para reducir el riesgo de dejar archivos finales incompletos, las bases se construyen primero con nombres temporales:
 
 ```text
-results/data_profile.json
+db_transaccional.tmp.db
+db_estrella.tmp.db
 ```
 
-## 8. Supuestos y dificultades
+Solo después de completar las inserciones y validaciones se reemplazan los archivos finales.
 
-### 8.1 Identificadores repetidos
+Las conexiones se cierran explícitamente antes de renombrar los archivos. Esto fue necesario porque Windows bloquea un archivo SQLite mientras otra conexión lo mantiene abierto.
 
-No se asume que la última fila sea la versión vigente de un personaje, porque el dataset no contiene una fecha de actualización ni un número de versión.
+Este mecanismo también ayuda a evitar que una ejecución fallida deje como resultado una base final incompleta.
 
-### 8.2 Valores desconocidos y valores nulos
+## 8. Validaciones
 
-Se distinguirá, cuando sea posible, entre:
+El perfilador y el pipeline comprueban:
 
-- Un valor conocido como `Unknown`.
-- Un marcador de ausencia como `NULL`, `N/A`, `None`, `---` o una cadena vacía.
+- Existencia del CSV.
+- Encabezado esperado.
+- Cantidad de filas y columnas.
+- Valores vacíos y equivalentes a nulo.
+- Identificadores repetidos.
+- Duplicados exactos.
+- Formatos de fechas.
+- Formatos y códigos de episodios.
+- Conservación de las 10.000 filas en `tbl_registro_raw`.
+- Conservación de las 10.000 observaciones.
+- Integridad de claves foráneas.
+- Integridad general de los archivos SQLite.
+- Correspondencia entre la base transaccional y la tabla de hechos.
 
-### 8.3 Fechas ambiguas
+Las dos bases produjeron:
 
-Se aplicarán reglas de interpretación según el separador y los patrones encontrados en el dataset. Los supuestos utilizados quedarán documentados y las fechas que no puedan interpretarse de forma segura se conservarán como nulas en la versión normalizada.
+```text
+PRAGMA integrity_check = ok
+PRAGMA foreign_key_check = []
+```
 
-### 8.4 Texto dañado
+La ejecución final produjo:
 
-No se eliminarán caracteres de manera indiscriminada. Las correcciones se aplicarán únicamente cuando exista una regla clara y reproducible.
+| Validación | Resultado |
+|---|---:|
+| Filas leídas | 10.000 |
+| Registros raw | 10.000 |
+| Personajes | 8.000 |
+| Observaciones | 10.000 |
+| Episodios | 45 |
+| Relaciones transaccionales | 24.548 |
+| Duplicados exactos | 1.011 |
+| Filas de hechos | 22.052 |
 
-## 9. Mejoras para una versión productiva
+![Ejecución final del pipeline](docs/img/ejecucion_pipeline.png)
 
-Con más tiempo y en un entorno productivo se considerarían las siguientes mejoras:
+## 9. Supuestos y limitaciones
 
-- Pruebas unitarias y de integración.
-- Registro estructurado de errores y métricas.
-- Archivo de configuración externo.
-- Reglas de calidad parametrizables.
-- Ejecuciones incrementales.
-- Control formal de esquemas.
-- Gestión de secretos si existieran fuentes externas.
+### Registros repetidos
+
+No existe una columna de actualización que permita ordenar las distintas versiones de un mismo personaje. Por esta razón, las observaciones se conservaron en lugar de sobrescribir información.
+
+### Valores faltantes
+
+No se imputaron valores ni se intentó adivinar información ausente. Los datos que no podían interpretarse con seguridad se almacenaron como `NULL` en la capa normalizada.
+
+### Fechas ambiguas
+
+Los formatos se interpretaron de acuerdo con los patrones observados en el archivo. Los valores explícitamente inválidos quedaron como nulos en la versión limpia.
+
+### Alcance
+
+La solución está pensada para una prueba local y un archivo de 10.000 registros. No se añadieron tecnologías como Spark, Airflow, Docker o servicios en la nube porque no eran necesarias para resolver este volumen ni los requisitos entregados.
+
+## 10. Mejoras para una versión productiva
+
+En una versión productiva consideraría:
+
+- Pruebas unitarias para las funciones de normalización.
+- Pruebas de integración para ambas bases.
+- Logging estructurado.
+- Reglas de calidad configurables.
+- Procesamiento por lotes o incremental para archivos más grandes.
+- Control formal de versiones del esquema.
+- Métricas y alertas de ejecución.
+- Separación entre ambientes.
 - Automatización mediante integración continua.
-- Observabilidad y alertas.
-- Catálogo de datos y linaje más detallado.
-- Estrategia de recuperación ante fallos.
-- Separación entre ambientes de desarrollo, pruebas y producción.
+
+Estas mejoras no se incluyeron porque el objetivo principal era entregar una solución funcional, clara y proporcional al ejercicio.
+
+## 11. Conclusión
+
+La solución transforma un archivo con inconsistencias en dos bases con propósitos diferentes:
+
+- `db_transaccional.db` conserva el origen, el linaje y las observaciones recibidas.
+- `db_estrella.db` organiza la información para consultas analíticas.
+
+Las decisiones principales fueron conservar la trazabilidad, no inventar versiones de los datos, separar correctamente las relaciones y evitar que los duplicados exactos distorsionaran el modelo analítico.
+
+El resultado final es reproducible, puede ejecutarse con un solo comando y utiliza únicamente Python y SQLite, sin dependencias externas.
