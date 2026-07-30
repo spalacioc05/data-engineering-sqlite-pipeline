@@ -264,9 +264,4 @@ La explicación detallada de las decisiones, transformaciones, supuestos y dific
 
 Los modelos también se encuentran en formato DBML y PDF dentro de la carpeta `docs`.
 
----
 
-## Autor
-
-**Santiago Palacio Cárdenas**  
-Estudiante de Ingeniería de Sistemas
