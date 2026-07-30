@@ -6,3 +6,4 @@ __pycache__/
 .idea/
 *.log
 .DS_Store
+*.tmp.db

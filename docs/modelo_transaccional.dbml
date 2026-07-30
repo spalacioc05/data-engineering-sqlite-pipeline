@@ -1,0 +1,101 @@
+Project prueba_ingenieria_datos {
+  database_type: 'SQLite'
+  Note: 'Modelo transaccional normalizado.'
+}
+
+Table tbl_carga {
+  id_carga integer [pk, increment]
+  nombre_archivo text [not null]
+  fecha_inicio text [not null]
+  fecha_fin text
+  filas_leidas integer [not null, default: 0]
+  filas_procesadas integer [not null, default: 0]
+  estado text [not null]
+  observaciones text
+}
+
+Table tbl_registro_raw {
+  id_registro_raw integer [pk, increment]
+  id_carga integer [not null]
+  numero_fila integer [not null]
+  id_personaje_origen integer [not null]
+  nombre_original text [not null]
+  estado_original text
+  especie_original text
+  origen_original text
+  ubicacion_original text
+  episodios_original text
+  fecha_creacion_original text
+  hash_registro text [not null]
+  es_duplicado_exacto integer [not null, default: 0]
+
+  indexes {
+    (id_carga, numero_fila) [unique]
+    id_personaje_origen
+    hash_registro
+  }
+}
+
+Table tbl_especie {
+  id_especie integer [pk, increment]
+  nombre text [not null, unique]
+}
+
+Table tbl_origen {
+  id_origen integer [pk, increment]
+  nombre text [not null, unique]
+}
+
+Table tbl_estado {
+  id_estado integer [pk, increment]
+  nombre text [not null, unique]
+}
+
+Table tbl_ubicacion {
+  id_ubicacion integer [pk, increment]
+  nombre text [not null, unique]
+}
+
+Table tbl_personaje {
+  id_personaje integer [pk]
+  nombre text [not null]
+  id_especie integer
+  id_origen integer
+  fecha_creacion text
+}
+
+Table tbl_personaje_observacion {
+  id_observacion integer [pk, increment]
+  id_personaje integer [not null]
+  id_registro_raw integer [not null, unique]
+  id_estado integer
+  id_ubicacion integer
+  tiene_advertencias integer [not null, default: 0]
+  detalle_advertencias text
+}
+
+Table tbl_episodio {
+  id_episodio integer [pk, increment]
+  codigo text [not null, unique]
+  temporada integer [not null]
+  numero integer [not null]
+}
+
+Table tbl_observacion_episodio {
+  id_observacion integer [not null]
+  id_episodio integer [not null]
+
+  indexes {
+    (id_observacion, id_episodio) [pk]
+  }
+}
+
+Ref: tbl_registro_raw.id_carga > tbl_carga.id_carga
+Ref: tbl_personaje.id_especie > tbl_especie.id_especie
+Ref: tbl_personaje.id_origen > tbl_origen.id_origen
+Ref: tbl_personaje_observacion.id_personaje > tbl_personaje.id_personaje
+Ref: tbl_personaje_observacion.id_registro_raw > tbl_registro_raw.id_registro_raw
+Ref: tbl_personaje_observacion.id_estado > tbl_estado.id_estado
+Ref: tbl_personaje_observacion.id_ubicacion > tbl_ubicacion.id_ubicacion
+Ref: tbl_observacion_episodio.id_observacion > tbl_personaje_observacion.id_observacion
+Ref: tbl_observacion_episodio.id_episodio > tbl_episodio.id_episodio
